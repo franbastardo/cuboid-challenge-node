@@ -199,16 +199,29 @@ describe('cuboid update', () => {
     );
   });
 
-  it('should succeed to update the cuboid', () => {
+  it('should succeed to update the cuboid', async () => {
     const [newWidth, newHeight, newDepth] = [5, 5, 5];
-    const response = { body: {} as Cuboid, status: HttpStatus.OK };
-    cuboid = response.body;
+    const id = cuboid.id as Id;
+
+    const response = await request(server)
+      .patch(urlJoin('/cuboids', id.toString()))
+      .send({ newDepth, newHeight, newWidth });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(cuboid.width).toBe(newWidth);
-    expect(cuboid.height).toBe(newHeight);
-    expect(cuboid.depth).toBe(newDepth);
-    expect(cuboid.bag?.id).toBe(bag.id);
+    expect(response.body.width).toBe(newWidth);
+    expect(response.body.height).toBe(newHeight);
+    expect(response.body.depth).toBe(newDepth);
+    expect(response.body.bag?.id).toBe(bag.id);
+  });
+
+  it('should fail if cuboid doesnt exist', async () => {
+    const [newWidth, newHeight, newDepth] = [5, 5, 5];
+
+    const response = await request(server)
+      .patch(urlJoin('/cuboids', '999'))
+      .send({ newDepth, newHeight, newWidth });
+
+    expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
   it('should fail to update if insufficient capacity and return 422 status code', () => {
@@ -226,14 +239,32 @@ describe('cuboid update', () => {
 });
 
 describe('cuboid delete', () => {
-  it('should delete the cuboid', () => {
-    const response = { status: HttpStatus.OK };
+  let bagId: Id;
+
+  beforeEach(async () => {
+    bagId = (
+      await Bag.query().insert(
+        factories.bag.build({
+          volume: 10000,
+          title: 'A bag',
+        })
+      )
+    ).id;
+  });
+
+  it('should delete the cuboid', async () => {
+    const cuboid = factories.cuboid.build({ bagId });
+    const id = (await Cuboid.query().insert(cuboid)).id;
+
+    const response = await request(server).delete(
+      urlJoin('/cuboids', id.toString())
+    );
 
     expect(response.status).toBe(HttpStatus.OK);
   });
 
-  it('should not delete and return 404 status code when cuboids doesnt exists', () => {
-    const response = { status: HttpStatus.NOT_FOUND };
+  it('should not delete and return 404 status code when cuboids doesnt exists', async () => {
+    const response = await request(server).delete(urlJoin('/cuboids', '999'));
 
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });

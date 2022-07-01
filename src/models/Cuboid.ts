@@ -37,6 +37,7 @@ export class Cuboid extends Base {
       });
     }
   }
+
   static get relationMappings(): RelationMappings {
     return {
       bag: {

@@ -49,3 +49,51 @@ export const create = async (
 
   return res.status(HttpStatus.CREATED).json(cuboid);
 };
+
+export const remove = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const id = req.params.id as Id;
+
+  const cuboid = await Cuboid.query().deleteById(id).withGraphFetched('bag');
+
+  if (!cuboid) {
+    return res.status(HttpStatus.NOT_FOUND).json(cuboid);
+  }
+
+  return res.status(HttpStatus.OK).json(cuboid);
+};
+
+export const update = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  const { newWidth, newHeight, newDepth } = req.body;
+  const id = req.params.id as Id;
+  const newVolume = newDepth * newHeight * newWidth;
+
+  const cuboid = await Cuboid.query().findById(id).withGraphFetched('bag');
+
+  if (!cuboid) {
+    return res.status(HttpStatus.NOT_FOUND).json(cuboid);
+  }
+
+  const oldVolume = cuboid.volume;
+
+  const diffVolume = newVolume - oldVolume;
+
+  if (cuboid.bag.availableVolume < diffVolume) {
+    return res.status(HttpStatus.UNPROCESSABLE_ENTITY);
+  }
+
+  const newCuboid = await Cuboid.query()
+    .patchAndFetchById(cuboid.id, {
+      width: newWidth,
+      height: newHeight,
+      depth: newDepth,
+    })
+    .withGraphFetched('bag');
+
+  return res.status(HttpStatus.OK).json(newCuboid);
+};
