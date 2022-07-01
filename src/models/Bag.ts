@@ -9,8 +9,23 @@ export class Bag extends Base {
   payloadVolume!: number;
   availableVolume!: number;
   cuboids?: Cuboid[] | undefined;
+  created_at: Date | undefined;
+  updated_at: Date | undefined;
 
   static tableName = 'bags';
+
+  $beforeInsert(): void {
+    this.created_at = new Date();
+    this.updated_at = new Date();
+    if (this.cuboids) {
+      this.payloadVolume = this.cuboids.reduce(
+        (acc, cuboid) =>
+          (acc = acc + cuboid.width * cuboid.depth * cuboid.height),
+        0
+      );
+      this.availableVolume = this.volume - this.payloadVolume;
+    }
+  }
 
   static get relationMappings(): RelationMappings {
     return {
