@@ -224,12 +224,12 @@ describe('cuboid update', () => {
     expect(response.status).toBe(HttpStatus.NOT_FOUND);
   });
 
-  it('should fail to update if insufficient capacity and return 422 status code', () => {
+  it('should fail to update if insufficient capacity and return 422 status code', async () => {
     const [newWidth, newHeight, newDepth] = [6, 6, 6];
-    const response = {
-      body: {} as Cuboid,
-      status: HttpStatus.UNPROCESSABLE_ENTITY,
-    };
+    const id = cuboid.id as Id;
+    const response = await request(server)
+      .patch(urlJoin('/cuboids', id.toString()))
+      .send({ newDepth, newHeight, newWidth });
 
     expect(response.status).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
     expect(response.body.width).not.toBe(newWidth);

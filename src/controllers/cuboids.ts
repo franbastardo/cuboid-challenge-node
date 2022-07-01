@@ -84,7 +84,9 @@ export const update = async (
   const diffVolume = newVolume - oldVolume;
 
   if (cuboid.bag.availableVolume < diffVolume) {
-    return res.status(HttpStatus.UNPROCESSABLE_ENTITY);
+    return res
+      .status(HttpStatus.UNPROCESSABLE_ENTITY)
+      .json({ message: 'Insufficient capacity in bag' });
   }
 
   const newCuboid = await Cuboid.query()
