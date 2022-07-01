@@ -104,7 +104,10 @@ describe('cuboid create', () => {
       depth: 5,
       bagId,
     });
-    await Promise.all(cuboids.map((data) => Cuboid.query().insert(data)));
+    // await Promise.all(cuboids.map((data) => Cuboid.query().insert(data)));
+    for (const cuboid of cuboids) {
+      await Cuboid.query().insert(cuboid);
+    }
   });
 
   it('should succeed', async () => {
